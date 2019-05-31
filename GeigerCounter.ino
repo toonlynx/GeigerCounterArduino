@@ -1,16 +1,17 @@
 #include "SevSeg.h"
 SevSeg sevseg; //Initiate a seven segment controller object
 const int sensorPin= 0;
+const int mins = 1;
 const float ipsmsvs=0.0057;
 float result = 0;
 float preresult = 0;
 int cpm = 0;
 int val = 0;
 unsigned long previousMillis = millis(); 
-const long interval = 60000; 
+const long interval = 60000*mins; 
 
 void setup() {
-//Serial.begin(9600);
+Serial.begin(9600);
 digitalWrite(14, HIGH); 
 byte numDigits = 4;
 byte digitPins[] = {9, 10, 11, 12};
@@ -26,51 +27,42 @@ sevseg.setBrightness(90);
 
 void loop() {
   int val = analogRead(sensorPin);
-  if(val < 4020){
   unsigned long currentMillis = millis();
+  if(val < 3989){
   cpm++;
   if (currentMillis - previousMillis >= interval) {
-     result = cpm*(ipsmsvs/((currentMillis - previousMillis)/1000));
+     result = (cpm*ipsmsvs/((currentMillis - previousMillis)/60))*1000;
+     char string[15] = "";    
+     char dstr[7] = "";
+     dtostrf(result, 3, 3, dstr);
+     sprintf(string, "result: %s", dstr);
+     Serial.println(string);
      preresult = result;
      cpm = 0;
      previousMillis = currentMillis;
-     //Serial.println("currentMillis");
-    // Serial.println(currentMillis);
-
   }
   else {
      result = preresult;
   }
- // if(cpm > 300){
-   //  result = cpm*(ipsmsvs/((currentMillis - previousMillis)/1000));
- // }
-  
-     /*    Serial.println("currentMillis1");
-         Serial.println(currentMillis);
-         Serial.println("previousMillis");
-         Serial.println(previousMillis);
-         Serial.println("VAL");
-         Serial.println(val);
-         Serial.println("RESULT");
-         Serial.println(result);
-         Serial.println("NUMBER");
-         Serial.println(cpm); */
+  if(cpm % 200 == 0 && cpm != 0){
+     preresult = (cpm*ipsmsvs/((currentMillis - previousMillis)/60))*1000;
+  }
 
 }
 
-if(result >= 0.9){
+if(result >= 9){
   sevseg.setNumber(result, 1);
 }
-if(result >= 0.09){
+if(result >= 0.9){
   sevseg.setNumber(result, 2);
 }
 else{
-if(result >= 0.009){
+if(result >= 0.09){
   sevseg.setNumber(result, 3);
 }
 else{
   sevseg.setNumber(result, 4);
 }
 }
-sevseg.refreshDisplay(); 
+sevseg.refreshDisplay();  
 }
